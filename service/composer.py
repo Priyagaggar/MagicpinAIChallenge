@@ -78,6 +78,12 @@ send another nudge, you already tried once.
 - If hints.intent_go_ahead is true: do NOT ask another qualifying question. Move straight into \
 executing or confirming the concrete next step.
 - If hints.turn_limit_reached is true: end the conversation gracefully regardless of content.
+- If hints.cold_start is true, you have no record of ever sending the first message in this \
+conversation - there is no established offer/ask to execute against. Do NOT end just because the \
+context is thin: acknowledge the merchant's message warmly and ask the ONE concrete detail you'd \
+need to move forward (e.g. which offer, which service, which time). Ending should be reserved for \
+negative signals (not_interested, confirmed auto-reply, unresolvable hostility), not for missing \
+context on an engaged merchant.
 - If the message is hostile or abusive, stay polite and do not escalate. If it also contains an \
 unrelated question, give a brief honest answer (or say it's outside what you can help with) and \
 gently redirect back to the original topic.
@@ -238,6 +244,12 @@ def detect_hints(conversation_turns: list[dict], latest_message: str, turn_numbe
     auto_reply_suspected = (auto_reply_pattern_hit or auto_reply_repeat_hit) and not already_nudged
     auto_reply_confirmed = (auto_reply_pattern_hit or auto_reply_repeat_hit) and already_nudged
 
+    # True when we have no record of ever having sent the first message in this
+    # conversation ourselves - e.g. the judge (or a test harness) opened /v1/reply
+    # directly without a preceding /v1/tick action. There is no established ask to
+    # execute against, so "end" would abandon an engaged merchant for no reason.
+    cold_start = not any(t.get("from") not in ("merchant", "customer") for t in conversation_turns[:-1])
+
     return {
         "auto_reply_suspected": auto_reply_suspected,
         "auto_reply_confirmed": auto_reply_confirmed,
@@ -245,4 +257,5 @@ def detect_hints(conversation_turns: list[dict], latest_message: str, turn_numbe
         "intent_go_ahead": bool(_INTENT_GO_RE.search(latest_message)),
         "hostile": bool(PROFANITY_RE.search(latest_message)),
         "turn_limit_reached": turn_number >= max_turns,
+        "cold_start": cold_start,
     }

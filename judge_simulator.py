@@ -271,7 +271,12 @@ class GroqProvider(LLMProvider):
             "https://api.groq.com/openai/v1/chat/completions",
             data=json.dumps({"model": self.model, "messages": messages,
                             "temperature": 0.2, "max_tokens": 1500}).encode("utf-8"),
-            headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
+            headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json",
+                     # Cloudflare in front of Groq's API blocks urllib's default
+                     # User-Agent as a bot fingerprint (error 1010) - a normal
+                     # browser UA string clears it.
+                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                                   "(KHTML, like Gecko) Chrome/120.0 Safari/537.36"}
         )
         resp = urlrequest.urlopen(req, timeout=TIMEOUT_LLM)
         data = json.loads(resp.read().decode("utf-8"))
