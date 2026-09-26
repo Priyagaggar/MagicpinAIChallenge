@@ -1,0 +1,25 @@
+app = "vera-challenge-bot"
+primary_region = "bom"
+
+[build]
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+
+[checks]
+  [checks.healthz]
+    grace_period = "10s"
+    interval = "15s"
+    method = "get"
+    path = "/v1/healthz"
+    port = 8080
+    timeout = "5s"
+    type = "http"

@@ -1,0 +1,8 @@
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+*.log
+service/tick_result.json
+service/reply_result.json
